@@ -4,11 +4,8 @@ import time
 import traceback
 from typing import Tuple
 
-from bittensor.core.axon import Axon
-from bittensor.core.config import Config
-from bittensor.core.subtensor import Subtensor
+from bittensor import Subtensor, Wallet, Config, Axon
 from bittensor.utils.btlogging import logging
-from bittensor_wallet import Wallet
 
 from protocol import Dummy
 
@@ -83,7 +80,7 @@ class Miner:
         logging.info(f"Subtensor: {self.subtensor}")
 
         # Initialize metagraph.
-        self.metagraph = self.subtensor.metagraph(self.config.netuid)
+        self.metagraph = self.subtensor.metagraph(netuid=self.config.netuid)
         logging.info(f"Metagraph: {self.metagraph}")
 
         if self.wallet.hotkey.ss58_address not in self.metagraph.hotkeys:
@@ -101,13 +98,9 @@ class Miner:
     def blacklist_fn(self, synapse: Dummy) -> Tuple[bool, str]:
         # Ignore requests from unrecognized entities.
         if synapse.dendrite.hotkey not in self.metagraph.hotkeys:
-            logging.trace(
-                f"Blacklisting unrecognized hotkey {synapse.dendrite.hotkey}"
-            )
+            logging.trace(f"Blacklisting unrecognized hotkey {synapse.dendrite.hotkey}")
             return True, None
-        logging.trace(
-            f"Not blacklisting recognized hotkey {synapse.dendrite.hotkey}"
-        )
+        logging.trace(f"Not blacklisting recognized hotkey {synapse.dendrite.hotkey}")
         return False, None
 
     def dummy(self, synapse: Dummy) -> Dummy:
@@ -144,7 +137,7 @@ class Miner:
         self.setup_axon()
 
         # Keep the miner alive.
-        logging.info(f"Starting main loop")
+        logging.info("Starting main loop")
         step = 0
         while True:
             try:
