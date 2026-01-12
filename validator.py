@@ -4,11 +4,8 @@ import random
 import time
 import traceback
 
-from bittensor.core.config import Config
-from bittensor.core.dendrite import Dendrite
-from bittensor.core.subtensor import Subtensor
+from bittensor import Subtensor, Wallet, Config, Dendrite
 from bittensor.utils.btlogging import logging
-from bittensor_wallet import Wallet
 
 from protocol import Dummy
 
@@ -86,7 +83,7 @@ class Validator:
         logging.info(f"Dendrite: {self.dendrite}")
 
         # Initialize metagraph.
-        self.metagraph = self.subtensor.metagraph(self.config.netuid)
+        self.metagraph = self.subtensor.metagraph(netuid=self.config.netuid)
         logging.info(f"Metagraph: {self.metagraph}")
 
         # Connect the validator to the network.
@@ -154,17 +151,27 @@ class Validator:
                 weights = [score / total for score in self.moving_avg_scores]
                 logging.info(f"[blue]Setting weights: {weights}[/blue]")
                 # Update the incentive mechanism on the Bittensor blockchain.
-                self.subtensor.set_weights(
-                    netuid=self.config.netuid,
+                response = self.subtensor.set_weights(
                     wallet=self.wallet,
+                    netuid=self.config.netuid,
                     uids=self.metagraph.uids,
                     weights=weights,
                     wait_for_inclusion=True,
-                    period=self.tempo  # Good for fast blocks - otherwise make sure to set proper period or remove this argument completely 
+                    period=self.tempo,  # Good for fast blocks - otherwise make sure to set proper period or remove this argument completely
                 )
+                if response.success:
+                    logging.success(
+                        f"Weights set successfully. Fee: {response.extrinsic_fee}"
+                    )
+                else:
+                    logging.error(
+                        f"Failed to set weights: {response.error} - {response.message}"
+                    )
                 self.metagraph.sync()
                 # sleep until next tempo
-                time.sleep((((self.subtensor.block // self.tempo) + 1) * self.tempo) + 1)
+                time.sleep(
+                    (((self.subtensor.block // self.tempo) + 1) * self.tempo) + 1
+                )
 
             except RuntimeError as e:
                 logging.error(e)

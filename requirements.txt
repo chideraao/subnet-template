@@ -1,1 +1,1 @@
-bittensor>=8.5.1
+bittensor>=10.0.1
