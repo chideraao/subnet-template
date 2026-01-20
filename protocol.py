@@ -1,10 +1,10 @@
 import typing
-import bittensor as bt
+from bittensor import Synapse
 
 
-class Dummy(bt.Synapse):
+class Dummy(Synapse):
     """
-    A simple dummy protocol that inherits from bt.Synapse.
+    A simple dummy protocol that inherits from Synapse.
     This protocol handles dummy request and response communication between
     the miner and the validator.
 
